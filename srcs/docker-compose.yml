@@ -1,0 +1,54 @@
+version: "3.0"
+volumes:
+ wordpress:
+  # name: wordpress
+  driver: local
+  driver_opts:
+   o: bind
+   type: none
+   device: /home/allysike/data/wordpress
+ database:
+  # name: database
+  driver: local
+  driver_opts:
+   o: bind
+   type: none
+   device: /home/allysike/data/database
+services:
+ mariadb:
+  image: mariadb
+  volumes:
+   - database:/var/lib/mysql
+  # restart: always
+  env_file: .env
+  build: ./requirements/mariadb/
+  networks:
+   - all_services
+ nginx:
+  depends_on:
+    - wordpress
+  image: nginx
+  volumes:
+   - wordpress:/var/www/html
+  restart: always
+  env_file: .env
+  build: ./requirements/nginx
+  networks:
+   - all_services
+  ports:
+   - "443:443"
+ wordpress:
+  depends_on:
+    - mariadb
+  image: wordpress
+  volumes:
+   - wordpress:/var/www/html
+  restart: always
+  env_file: .env
+  build: ./requirements/wordpress
+  networks:
+   - all_services
+networks:
+ all_services:
+  # name: all_services
+  driver: bridge
